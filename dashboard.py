@@ -1,19 +1,30 @@
+from datetime import datetime
+import config
+
 def show_dashboard(account):
-    print("=" * 60)
+    
+    current_time = datetime.now()
+
+
+    print("=" * config.LINE_WIDTH)
     print("         KAI_BOT MARKET TERMINAL")
-    print("=" * 60)
+    print("=" * config.LINE_WIDTH)
 
     print("Connection : ✅ Connected")
-    print(f"Account    : {account.login}")
-    print(f"Balance    : ${account.balance:,.2f}")
-    print(f"Equity     : ${account.equity:,.2f}")
-    print(f"Server     : {account.server}")
+    
+    print(f"{'Date':<12} : {current_time.strftime('%d %b %Y')}")
+    print(f"{'Time':<12} : {current_time.strftime('%H:%M:%S')}")
+
+    print(f"{'Account':<12} : {account.login}")
+    print(f"{'Balance':<12} : ${account.balance:,.2f}")
+    print(f"{'Equity':<12} : ${account.equity:,.2f}")
+    print(f"{'Server':<12} : {account.server}")
 
     print()
 
-    print("=" * 60)
-    print(f"{'Symbol':<12}{'Bid':<14}{'Ask':<14}{'Spread':<10}{'Volume'}")
-    print("=" * 60)
+    print("=" * config.LINE_WIDTH)
+    print(f"{'Symbol':<12}{'Bid':<14}{'Ask':<14}{'Spread':<10}{'Volume':<12}")
+    print("=" * config.LINE_WIDTH)
 
 
 def show_market(symbol, bid, ask, spread, volume):
@@ -27,4 +38,4 @@ def show_market(symbol, bid, ask, spread, volume):
 
 
 def finish_dashboard():
-    print("=" * 60)
+    print("=" * config.LINE_WIDTH)

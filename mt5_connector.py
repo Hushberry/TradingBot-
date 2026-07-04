@@ -25,7 +25,7 @@ def get_account_info():
     print(f"Margin: {account_info.margin}")
     print(f"Leverage: {account_info.leverage}")
     print(f"Currency: {account_info.currency}")
-    print("=" * 50)
+    print("=" * config.LINE_WIDTH)
 
 def get_symbol_info(symbol):
    info = mt5.symbol_info(symbol)
@@ -42,11 +42,11 @@ def get_symbol_info(symbol):
    spread_points = (tick.ask - tick.bid) / symbol_info.point
     
    print("\n========= Market Data ==========")
-   print(f"Symbol: {symbol}")
-   print(f"Bid: {tick.bid}")
-   print(f"Ask: {tick.ask}")
-   print (f"Time: {tick.time}")
-   print(f"Volume: {tick.volume}")
+   print(f"{'Symbol':<12} : {symbol}")
+   print(f"{'Bid':<12} : {tick.bid}")
+   print(f"{'Ask':<12} : {tick.ask}")
+   print(f"{'Time':<12} : {tick.time}")
+   print(f"{'Volume':<12} : {tick.volume}")
    print(f"Spread: {spread_points:.1f} points")
    print(f"Last: {tick.last}")
    print("===================================")    

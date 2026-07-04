@@ -4,7 +4,7 @@ import mt5_connector
 import dashboard
 import MetaTrader5 as mt5
 
-print("=" * 50)
+print("=" * config.LINE_WIDTH)
 print(f"Welcome to {config.BOT_NAME}")
 print(f"Version: {config.VERSION}")
 print(f"Author: {config.AUTHOR}")
