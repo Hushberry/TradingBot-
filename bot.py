@@ -6,6 +6,9 @@ import MetaTrader5 as mt5
 import candle_engine
 import trend_engine
 import pattern_engine
+import support_engine
+import signal_engine
+import analysis_dashboard
 
 
 print("=" * config.LINE_WIDTH)
@@ -21,7 +24,7 @@ account = mt5.account_info()
 
 dashboard.show_dashboard(account)
 
-symbols = [
+SYMBOLS = [
      "XAUUSDm",
      "EURUSDm",
      "GBPUSDm",
@@ -34,7 +37,11 @@ symbols = [
      "ETHUSDm",
 ]
 
-for symbol in symbols:
+TIMEFRAME = mt5.TIMEFRAME_H1
+CANDLE_COUNT = 500
+TIMEFRAME_NAME = candle_engine.get_timeframe_name(TIMEFRAME)
+
+for symbol in SYMBOLS:
     info = mt5.symbol_info(symbol)
     tick = mt5.symbol_info_tick(symbol)
 
@@ -54,18 +61,19 @@ dashboard.finish_dashboard()
 
 print()
 
-for symbol in symbols:
+for symbol in SYMBOLS:
 
     rates = candle_engine.get_historical_candles(
         symbol,
-        mt5.TIMEFRAME_H1,
-        500
+        TIMEFRAME,
+        CANDLE_COUNT 
     )
 
     if rates is None:
         continue
 
-    latest_price = rates[-1]["close"]
+    latest_candle = rates[-1]
+    latest_price = latest_candle["close"]
 
     ma50 = trend_engine.calculate_ma(rates, 50)
     ma200 = trend_engine.calculate_ma(rates, 200)
@@ -80,15 +88,22 @@ for symbol in symbols:
 
     pattern = pattern_engine.analyze_patterns(rates)
 
-    print()
-    print("=" * config.LINE_WIDTH)
-    print(f"Market Analysis : {symbol}")
-    print("=" * config.LINE_WIDTH)
+    support = support_engine.find_support(rates)
+    resistance = support_engine.find_resistance(rates)
 
-    print(f"Current Price      : {latest_price:.5f}")
-    print(f"MA50               : {ma50:.5f}")
-    print(f"MA200              : {ma200:.5f}")
-    print(f"Trend              : {trend}")
-    print(f"Market Structure   : {market_structure}")
-    print(f"Pattern            : {pattern}")
+    signal = signal_engine.get_trade_bias(trend)
 
+
+    analysis_dashboard.show_analysis(
+        symbol,
+        candle_engine.get_timeframe_name(TIMEFRAME),
+        latest_candle,
+        ma50,
+        ma200,
+        trend,
+        market_structure,
+        pattern,
+        support,
+        resistance,
+        signal,
+    )

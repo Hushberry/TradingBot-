@@ -24,35 +24,28 @@ def get_timeframe_name(timeframe):
 def get_historical_candles(symbol, timeframe, count=500):
     """
     Get historical candle data from MetaTrader 5.
-    """
 
-    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, count)
+    Args: 
+        symbol (str): Trading symbol (e.g. XAUUSDm).
+        timeframe (int): MetaTrader 5 timeframe constant.
+        count (int): Number of candles to retrieve.
+
+    Returns:
+       numpy.ndarray | None:
+            Historical candle data if successful,
+            otherwise None.
+    """
+    
+    rates = mt5.copy_rates_from_pos(
+        symbol, 
+        timeframe, 
+        0, 
+        count
+    )
+
     if rates is None:
+        print(f"Failed to retrieve candles for {symbol}")
         print(mt5.last_error())
         return None
-
-    print("=" * LINE_WIDTH)
-    print("      Historical Candles      ")
-    print("=" * LINE_WIDTH)
-
-    print(f"Symbol          : {symbol}")
-    print(f"Timeframe       : {get_timeframe_name(timeframe)}")
-    print(f"Candles         : {len(rates   )}")
-
-    print("=" * LINE_WIDTH)
-
-    latest = rates[-1]
-
-    print(f"Latest rates:")
-    print("-" * LINE_WIDTH)
-
-    print(f"Time        : {datetime.fromtimestamp(latest['time'])}")
-    print(f"Open        : {latest['open']:.5f}")
-    print(f"High        : {latest['high']:.5f}")
-    print(f"Low         : {latest['low']:.5f}")
-    print(f"Close       : {latest['close']:.5f}")
-    print(f"Volume      : {latest['tick_volume']:.2f}")
-
-    print("=" * LINE_WIDTH)
-
+    
     return rates

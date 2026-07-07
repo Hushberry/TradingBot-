@@ -15,12 +15,6 @@ def calculate_ma(rates, period):
     return ma
 
 
-        
-
-
-
-
-
 def is_bullish(price, ma50, ma200):
     """
     Return True if the marker is bullish, False otherwise.
@@ -28,8 +22,6 @@ def is_bullish(price, ma50, ma200):
     if price > ma50 and ma50 > ma200:
         return True
     return False
-
-
 
 def is_bearish(price, ma50, ma200):
     """
@@ -39,19 +31,15 @@ def is_bearish(price, ma50, ma200):
         return True
     return False
     
-
-
-
-
 def analyze_trend(price, ma50, ma200):
    if price > ma50 and ma50 > ma200:
-       return "🟢 Bullish"
+       return "📈 Uptrend"
    
    elif price < ma50 and ma50 < ma200:
-       return "🔴 Bearish"
+       return "📉 Downtrend"
    
    else:
-       return "🟡 Sideways"
+       return "🟡 Pullback"
 
 def get_market_structure(rates):
     """
@@ -72,7 +60,7 @@ def get_market_structure(rates):
         and previous["high"] < older["high"]
     ):
         return "Lower Highs"
-    return "Sideways"
+    return "↔️ Sideways"
 
 
 
