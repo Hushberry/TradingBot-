@@ -1,3 +1,5 @@
+import MetaTrader5 as mt5
+
 def calculate_ma(rates, period):
     """
 
@@ -42,13 +44,14 @@ def is_bearish(price, ma50, ma200):
 
 
 def analyze_trend(price, ma50, ma200):
-    if is_bullish(price, ma50, ma200):
-        return "bullish"
-    elif is_bearish(price, ma50, ma200):
-        return "🔴 Bearish"
-    else:
-        return "🟡 Sideways"
-
+   if price > ma50 and ma50 > ma200:
+       return "🟢 Bullish"
+   
+   elif price < ma50 and ma50 < ma200:
+       return "🔴 Bearish"
+   
+   else:
+       return "🟡 Sideways"
 
 def get_market_structure(rates):
     """

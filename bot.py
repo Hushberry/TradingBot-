@@ -5,6 +5,8 @@ import dashboard
 import MetaTrader5 as mt5
 import candle_engine
 import trend_engine
+import pattern_engine
+
 
 print("=" * config.LINE_WIDTH)
 print(f"Welcome to {config.BOT_NAME}")
@@ -53,28 +55,40 @@ dashboard.finish_dashboard()
 print()
 
 for symbol in symbols:
+
     rates = candle_engine.get_historical_candles(
-        symbol, 
-        mt5.TIMEFRAME_H1, 
+        symbol,
+        mt5.TIMEFRAME_H1,
         500
     )
+
     if rates is None:
         continue
 
-latest_price = rates[-1]["close"]
-ma50 = trend_engine.calculate_ma(rates, 50)
-ma200 = trend_engine.calculate_ma(rates, 200)
+    latest_price = rates[-1]["close"]
 
-trend = trend_engine.analyze_trend(
-    latest_price, 
-    ma50, 
-    ma200
-)
+    ma50 = trend_engine.calculate_ma(rates, 50)
+    ma200 = trend_engine.calculate_ma(rates, 200)
 
-market_structure = trend_engine.get_market_structure(rates)
-print(f"MA50                : {ma50:<12.5f}")
-print(f"MA200               : {ma200:<12.5f}")
-print(f"Trend               : {trend}")
-print(f"Market Structure    : {market_structure}")
+    trend = trend_engine.analyze_trend(
+        latest_price,
+        ma50,
+        ma200
+    )
 
-print("=" * config.LINE_WIDTH)
+    market_structure = trend_engine.get_market_structure(rates)
+
+    pattern = pattern_engine.analyze_patterns(rates)
+
+    print()
+    print("=" * config.LINE_WIDTH)
+    print(f"Market Analysis : {symbol}")
+    print("=" * config.LINE_WIDTH)
+
+    print(f"Current Price      : {latest_price:.5f}")
+    print(f"MA50               : {ma50:.5f}")
+    print(f"MA200              : {ma200:.5f}")
+    print(f"Trend              : {trend}")
+    print(f"Market Structure   : {market_structure}")
+    print(f"Pattern            : {pattern}")
+
