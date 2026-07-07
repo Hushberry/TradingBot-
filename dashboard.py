@@ -28,8 +28,8 @@ def show_dashboard(account):
 def show_market(symbol, bid, ask, spread, volume):
     print(
         f"{symbol:<12}"
-        f"{bid:<14}"
-        f"{ask:<14}"
+        f"{bid:<14.5f}"
+        f"{ask:<14.5f}"
         f"{spread:<10.1f}"
         f"{volume:.2f}"
     )

@@ -14,7 +14,7 @@ def get_account_info():
     account_info = mt5.account_info()
     if account_info is None:
         print("Failed to retrieve account information. Error code:", mt5.last_error())
-        return
+        return account_info
     
     print("========= Account Information ==========")
     print(f"Login: {account_info.login}")
