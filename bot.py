@@ -1,29 +1,163 @@
+from datetime import datetime, timedelta
+import time
 import config
 import logger
 import mt5_connector
-import dashboard
+import screens.dashboard as dashboard
 import MetaTrader5 as mt5
-import candle_engine
-import trend_engine
-import pattern_engine
-import support_engine
-import signal_engine
+from engines import candle_engine
+from engines import trend_engine
+from engines import pattern_engine
+from engines import support_engine
+from engines import signal_engine
 import analysis_dashboard
-import confirmation_engine
-import mtf_engine
+from engines import confirmation_engine
+from engines import mtf_engine
+from engines import risk_manager
+from engines import entry_engine
+from ui import terminal_ui
+from ui import market_watch
+from ui import trade_card
+from ui import account_overview
+from ui import scan_summary
+from ui import open_positions
+from ui import trade_history
+from ui import performance_dashboard
+from ui import live_terminal
+from screens import dashboard
 
 
+start_time = time.time()
 # ==========================================
 # START BOT
 # ==========================================
+
+
+start_time = time.time()
 
 logger.log("KAI_Bot has started.")
 
 mt5_connector.connect_to_mt5()
 
 account = mt5.account_info()
+risk = risk_manager.risk_report(1)
+
+terminal_ui.clear()
 
 dashboard.show_header(account)
+
+
+
+account_data = {
+    "balance": risk["balance"],
+    "equity": risk["equity"],
+    "free_margin": risk["free_margin"],
+    "risk_amount": risk["risk_amount"],
+    "drawdown": risk["drawdown"],
+    "max_daily_loss": risk["max_daily_loss"],
+    "max_daily_profit": risk["max_daily_profit"],
+    "can_trade": risk["can_trade"],
+}
+account_overview.draw(account_data)
+# ==========================================
+# OPEN POSITIONS
+# ==========================================
+
+
+raw_positions = mt5.positions_get()
+
+positions = []
+if raw_positions:
+    for pos in raw_positions:
+        positions.append({
+            "symbol": pos.symbol,
+            "type": "BUY" if pos.type == mt5.ORDER_TYPE_BUY else "SELL",
+            "lot": pos.volume,
+            "price": pos.price_open,
+            "profit": pos.profit,
+        })
+
+# ==========================================
+# TRADE HISTORY
+# ==========================================
+
+date_from = datetime.now() - timedelta(days=7)
+date_to = datetime.now()
+
+raw_history = mt5.history_deals_get(date_from, date_to)
+
+history = []
+if raw_history:
+    for deal in raw_history:
+        history.append({
+            "ticket": deal.ticket,
+            "symbol": deal.symbol,
+            "type": "BUY" if deal.type == mt5.DEAL_TYPE_BUY else "SELL",
+            "lots": deal.volume,
+            "profit": deal.profit,
+        })
+
+# ==========================================
+# PERFORMANCE CALCULATION
+# ==========================================
+
+def calculate_performance(history):
+    if not history:
+        return {
+            "total_trades": 0, "wins": 0, "losses": 0, "win_rate": 0,
+            "profit_factor": 0, "net_profit": 0, "largest_win": 0,
+            "largest_loss": 0, "average_rr": 0, "current_streak": 0,
+            "best_pair": "N/A", "worst_pair": "N/A",
+        }
+    wins = [t for t in history if t["profit"] > 0]
+    losses = [t for t in history if t["profit"] < 0]
+    total_trades = len(history)
+    win_count = len(wins)
+    loss_count = len(losses)
+    win_rate = (win_count / total_trades * 100) if total_trades else 0
+    gross_profit = sum(t["profit"] for t in wins)
+    gross_loss = abs(sum(t["profit"] for t in losses))
+    profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 0
+    net_profit = sum(t["profit"] for t in history)
+    largest_win = max((t["profit"] for t in wins), default=0)
+    largest_loss = min((t["profit"] for t in losses), default=0)
+    avg_win = (gross_profit / win_count) if win_count else 0
+    avg_loss = (gross_loss / loss_count) if loss_count else 0
+    average_rr = (avg_win / avg_loss) if avg_loss else 0
+    streak = 0
+    for t in reversed(history):
+        if t["profit"] > 0:
+            if streak >= 0:
+                streak += 1
+            else:
+                break
+        elif t["profit"] < 0:
+            if streak <= 0:
+                streak -= 1
+            else:
+                break
+    pair_profit = {}
+    for t in history:
+        pair_profit.setdefault(t["symbol"], 0)
+        pair_profit[t["symbol"]] += t["profit"]
+    best_pair = max(pair_profit, key=pair_profit.get) if pair_profit else "N/A"
+    worst_pair = min(pair_profit, key=pair_profit.get) if pair_profit else "N/A"
+    return {
+        "total_trades": total_trades,
+        "wins": win_count,
+        "losses": loss_count,
+        "win_rate": win_rate,
+        "profit_factor": profit_factor,
+        "net_profit": net_profit,
+        "largest_win": largest_win,
+        "largest_loss": largest_loss,
+        "average_rr": average_rr,
+        "current_streak": streak,
+        "best_pair": best_pair,
+        "worst_pair": worst_pair,
+    }
+
+performance = calculate_performance(history)
 
 
 # ==========================================
@@ -46,6 +180,8 @@ SYMBOLS = [
 TIMEFRAME = mt5.TIMEFRAME_H1
 CANDLE_COUNT = 500
 
+best_trade = None
+highest_score = -1 
 
 # ==========================================
 # MARKET WATCH
@@ -88,13 +224,40 @@ for symbol in SYMBOLS:
     # Spread
     spread = (tick.ask - tick.bid) / info.point
 
-    # Save row
+    # Trade bias (BUY/SELL/WAIT)
+    signal = signal_engine.get_trade_bias(trend)
+
+    # Candlestick pattern
+    pattern = pattern_engine.analyze_patterns(rates)
+
+    # Multi-timeframe confirmation (H1 vs H4)
+    h1_trend = mtf_engine.get_timeframe_trend(symbol, mt5.TIMEFRAME_H1)
+    h4_trend = mtf_engine.get_timeframe_trend(symbol, mt5.TIMEFRAME_H4)
+    mtf_confirmation = mtf_engine.compare_trends(h1_trend, h4_trend)
+
+    # Market structure — not built yet, stubbed for now
+    market_structure = "N/A"
+
+    # Confirmation score
+    result = confirmation_engine.calculate_trade_score(
+        trend,
+        pattern,
+        market_structure,
+        mtf_confirmation,
+        signal,
+    )
+
+    percent = result["percent"]
+
+    
     market_data.append({
         "symbol": symbol,
+        "trend": trend,
+        "signal": signal,
+        "confidence": percent,
+        "spread": spread,
         "bid": tick.bid,
         "ask": tick.ask,
-        "spread": spread,
-        "trend": trend
     })
 
 # Show Market Watch
@@ -102,10 +265,9 @@ dashboard.show_market_watch(market_data)
 
 print()
 
-
-# ==========================================
-# AI ANALYSIS
-# ==========================================
+buy_count = 0
+sell_count = 0
+wait_count = 0
 
 for symbol in SYMBOLS:
 
@@ -147,8 +309,20 @@ for symbol in SYMBOLS:
 
     signal = signal_engine.get_trade_bias(trend)
 
+    if signal == "📈 BUY":
+        buy_count += 1
+    elif signal == "📉 SELL":
+        sell_count += 1
+    else:
+        wait_count += 1
+
+    entry = entry_engine.get_entry_price(
+        signal,
+        latest_candle
+    )
+
     # -------------------------
-    # Multi-Timeframe
+    # Multi Timeframe
     # -------------------------
 
     h1_trend = mtf_engine.get_timeframe_trend(
@@ -170,13 +344,18 @@ for symbol in SYMBOLS:
     # AI Confidence
     # -------------------------
 
-    score, rating = confirmation_engine.calculate_trade_score(
+    confirmation = confirmation_engine.calculate_trade_score(
         trend,
         pattern,
         market_structure,
         mtf_confirmation,
-        signal
+        signal,
     )
+
+    score = confirmation["score"]
+    confidence = confirmation["confidence"]
+    rating = confirmation["rating"]
+    percent = confirmation["percent"]
 
     # -------------------------
     # Display Analysis
@@ -199,4 +378,23 @@ for symbol in SYMBOLS:
         score,
         rating,
         signal,
+        entry,
+        risk,
     )
+
+    print()
+
+# ==========================================
+# SCAN SUMMARY
+# ==========================================
+
+analysis_dashboard.show_scan_summary(
+    len(market_data),
+    buy_count,
+    sell_count,
+    wait_count
+)
+
+runtime = time.time() - start_time
+
+print(f"\nTotal Runtime : {runtime:.2f} seconds")

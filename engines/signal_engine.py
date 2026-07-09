@@ -4,11 +4,14 @@ def get_trade_bias(trend):
     based on the current trend
     """
 
-    if trend == "📈 Uptrend":
+    if trend == "📈 Bull":
         return "📈 BUY"
     
-    elif trend == "📉 Downtrend":
+    elif trend == "📉 Bear":
         return "📉 SELL"
     
     else:
         return "⏸️  WAIT"
+    
+    # Decide trade bias
+    signal = signal_engine.get_trade_bias(trend)

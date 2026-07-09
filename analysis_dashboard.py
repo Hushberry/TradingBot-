@@ -1,9 +1,35 @@
+from ast import Return
+from encodings.punycode import T
+from turtle import title
+from numpy import empty
 import config
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 from datetime import datetime
-from terminal_colors import Color
+from colorama import Fore, Style
+from screens.dashboard import show_header
+
 
 LABEL = config.LABEL_WIDTH
 
+console = Console()
+
+def build_confidence_bar(percent):
+    """
+    Build a graphical confidence bar
+
+    example
+
+    80 ->
+    ████████░░ 80%
+    """
+    percent = max(0, min(100, int(percent)))
+
+    filled = percent // 10
+    empty = 10 - filled
+
+    return "█" * filled + "░" *empty 
 
 def show_analysis(
     symbol,
@@ -22,122 +48,110 @@ def show_analysis(
     score,
     rating,
     signal,
+    entry,
+    risk,
 ):
-    
+
     LINE = config.LINE_WIDTH
 
-    print("=" * LINE)
-    print(f"{'KAI BOT ANALYSIS':^{LINE}}")
-    print("=" * LINE)
-    print()
+    confidence = int(score * 20)
 
-    # -------------------------------------------------
-    # SYMBOL
-    # -------------------------------------------------
+    table = Table(show_header=False, box=None)
 
-    print("\nSymbol")
-    print("-" * LINE)
+    table.add_row(
+       "Trend",
+       signal,
+       "Confidence",
+      f"{build_confidence_bar(confidence)} {confidence}%"
+    )
 
-    print(f"{'Symbol':<{LABEL}} : {symbol}")
-    print(f"{'Timeframe':<{LABEL}} : {timeframe}")
-    print(f"{'Time':<{LABEL}} : {datetime.fromtimestamp(latest_candle['time'])}")
+    table.add_row(
+        "Pattern",
+        str(pattern),
+        "Structure",
+        str(market_structure)
+    )
 
+    table.add_row(
+        "Entry",
+        f"{entry:.5f}" if isinstance(entry, float) else str(entry),
+        "Support",
+        f"{support:.5f}" if isinstance(support, float) else str(support)
+    )
+
+    table.add_row(
+        "Resistance",
+        f"{resistance:.5f}" if isinstance(resistance, float) else str(resistance),
+        "MA50",
+        f"{ma50:.5f}"
+    )
+
+    table.add_row(
+       "MA200",
+        f"{ma200:.5f}",
+        "Pattern",
+        str(pattern)
+   )
+
+
+
+    table.add_row(
+        "H1",
+        str(h1_trend),
+        "H4",
+        str(h4_trend)
+    )
+
+    table.add_row(
+        "Confirmation",
+        str(mtf_confirmation),
+        "",
+        ""
+    )
+
+    console.print()
+
+    console.print(
+        Panel(
+            table,
+            title=f"[bold cyan]{symbol}[/bold cyan]  ({timeframe})",
+            subtitle="KAI AI Trade Card",
+            expand=False,
+        )
+    )
+
+
+def show_scan_summary(total_pairs, buy, sell, wait):
+    """
+    Displays final scan statistics.
+    """
+
+    table = Table(title="Scan Summary", show_header=True)
+
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", justify="right", style="green")
+
+    table.add_row("Pairs Scanned", str(total_pairs))
+    table.add_row("BUY Signals", str(buy))
+    table.add_row("SELL Signals", str(sell))
+    table.add_row("WAIT Signals", str(wait))
+
+    console.print(table)
+
+
+def trade_strength(score):
+
+    if score >= 9:
+        return "🟢 STRONG BUY"
     
-    # -------------------------------------------------
-    # PRICE
-    # -------------------------------------------------
-
-    print("\n" + "=" * LINE)
-    print("Price Information")
-    print("-" * LINE)
-
-    print(f"{'Open':<{LABEL}} : {latest_candle['open']:.5f}")
-    print(f"{'High':<{LABEL}} : {latest_candle['high']:.5f}")
-    print(f"{'Low':<{LABEL}} : {latest_candle['low']:.5f}")
-    print(f"{'Close':<{LABEL}} : {latest_candle['close']:.5f}")
-    print(f"{'Volume':<{LABEL}} : {latest_candle['tick_volume']:.0f}")
+    elif score >= 7:
+        return "🟢 BUY"
     
+    elif score >= 5:
+        return "🟡 WAIT"
     
-    # -------------------------------------------------
-    # TREND
-    # -------------------------------------------------
-
-    print("\n" + "=" * LINE)
-    print("Trend Analysis")
-    print("-" * LINE)
-
-    print(f"{'MA 50':<{LABEL}} : {ma50:.5f}")
-    print(f"{'MA 200':<{LABEL}} : {ma200:.5f}")
-    print(f"{'Trend':<{LABEL}} : {trend}")
-    print(f"{'Structure':<{LABEL}} : {market_structure}")
-    print(f"{'Pattern':<{LABEL}} : {pattern}")
+    elif score >= 3:
+        return "🟠 WEAK SELL"
     
-
-    # -------------------------------------------------
-    # SUPPORT / RESISTANCE
-    # -------------------------------------------------
-
-    print("\n" + "=" * LINE)
-    print("Support / Resistance")
-    print("-" * LINE)
-
-    print(f"{'Support':<{LABEL}} : {support:.5f}")
-    print(f"{'Resistance':<{LABEL}} : {resistance:.5f}")
-
-
-    # -------------------------------------------------
-    # MTF
-    # -------------------------------------------------
-
-    print("\n" + "=" * LINE)
-    print("Multi-Timeframe")
-    print("-" * LINE)
-
-    print(f"{'H1 Trend':<{LABEL}} : {h1_trend}")
-    print(f"{'H4 Trend':<{LABEL}} : {h4_trend}")
-    print(f"{'Confirmation':<{LABEL}} : {mtf_confirmation}")
-
-
-    # -------------------------------------------------
-    # AI CONFIDENCE
-    # -------------------------------------------------
-
-    print("\n" + "=" * LINE)
-    print("Ai Confidence")
-    print("-" * LINE)
-
-    print(f"{'Confidence':<{LABEL}} : {rating}")
-    print()
-
-    if "BUY" in signal:
-        decision = Color.GREEN + signal + Color.RESET
-
-    elif "SELL" in signal:
-        decision = Color.RED + signal + Color.RESET
-
     else:
-        decision = Color.YELLOW + signal + Color.RESET
-
-        print(f"{'Decision':<18}: {decision}")
-        print("=" * LINE)
-        print()
-
-    print("Reason")
-    print("-" * config.LINE_WIDTH)
-
-    if signal == "📈 BUY":
-
-       print("✓ Trend is bullish")
-       print("✓ Higher timeframe agrees")
-       print("✓ Confidence above threshold")
-
-    elif signal == "📉 SELL":
-
-        print("✓ Trend is bearish")
-        print("✓ Higher timeframe agrees")
-        print("✓ Confidence above threshold")
-
-    else:
-
-        print("• Market not aligned")
-        print("• Waiting for confirmation")
+        return "🔴 STRONG SELL"

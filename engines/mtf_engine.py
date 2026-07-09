@@ -1,6 +1,6 @@
 
-import candle_engine
-import trend_engine
+from engines import candle_engine
+from engines import trend_engine
 import config
 
 
