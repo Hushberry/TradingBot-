@@ -1,7 +1,7 @@
 from ast import Return
 from encodings.punycode import T
 from turtle import title
-from numpy import empty
+from numpy import empty, percentile
 import config
 from rich.console import Console
 from rich.panel import Panel
@@ -9,6 +9,7 @@ from rich.table import Table
 from datetime import datetime
 from colorama import Fore, Style
 from screens.dashboard import show_header
+
 
 
 LABEL = config.LABEL_WIDTH
@@ -22,7 +23,7 @@ def build_confidence_bar(percent):
     example
 
     80 ->
-    ████████░░ 80%
+    ████████ ░░ 80%
     """
     percent = max(0, min(100, int(percent)))
 
@@ -46,15 +47,16 @@ def show_analysis(
     h4_trend,
     mtf_confirmation,
     score,
-    rating,
+    percent,
     signal,
+    grade,
     entry,
     risk,
 ):
 
     LINE = config.LINE_WIDTH
 
-    confidence = int(score * 20)
+    confidence = percent
 
     table = Table(show_header=False, box=None)
 
@@ -63,6 +65,12 @@ def show_analysis(
        signal,
        "Confidence",
       f"{build_confidence_bar(confidence)} {confidence}%"
+    )
+    table.add_row(
+        "AI Score",
+        f"{score}/100",
+        "AI Grade",
+        grade
     )
 
     table.add_row(
@@ -115,18 +123,24 @@ def show_analysis(
         Panel(
             table,
             title=f"[bold cyan]{symbol}[/bold cyan]  ({timeframe})",
-            subtitle="KAI AI Trade Card",
+            subtitle="KAI Smart Money AI",
             expand=False,
         )
     )
 
 
-def show_scan_summary(total_pairs, buy, sell, wait):
+def show_scan_summary(
+    total_pairs,
+    buy,
+    sell,
+    wait,
+    average_score,
+):
     """
     Displays final scan statistics.
     """
 
-    table = Table(title="Scan Summary", show_header=True)
+    table = Table(title="Market Scan Summary", show_header=True)
 
     table.add_column("Metric", style="cyan")
     table.add_column("Value", justify="right", style="green")
@@ -138,7 +152,25 @@ def show_scan_summary(total_pairs, buy, sell, wait):
 
     console.print(table)
 
+    if average_score >= 80:
+        institutional_bias = "🟢 Strongly Bullish"
 
+    elif average_score >= 60:
+        institutional_bias = "🟢 Bullish"
+
+    elif average_score >= 40:
+        institutional_bias = "🟡 Moderately Bullish"
+
+    elif average_score >= 20:
+        institutional_bias = "🟠 Neutral"
+
+    else:
+        institutional_bias = "🔴 Bearish"
+
+    console.print(f"\nAverage AI Score   : [bold cyan]{average_score:.1f}%[/bold cyan]")
+    console.print(f"Institutional Bias : [bold green]{institutional_bias}[/bold green]")
+
+    
 def trade_strength(score):
 
     if score >= 9:
@@ -155,3 +187,4 @@ def trade_strength(score):
     
     else:
         return "🔴 STRONG SELL"
+    

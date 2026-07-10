@@ -3,9 +3,21 @@
 # ==================================
 import MetaTrader5 as mt5
 
-BOT_NAME = "KAI_Bot"
-VERSION = "1.0"
+# ======================================================
+# KAI SMART MONEY AI
+# ======================================================
+
+BOT_NAME = "KAI Smart Money AI"
+
+BOT_SUBTITLE = "Institutional Trading Intelligence"
+
+VERSION = "3.0"
+
 AUTHOR = "Vincent Chimezirim"
+
+TAGLINE = "Powered by Smart Money Concepts + AI"
+
+RELEASE = "Core Engine"
 
 SYMBOLS = ["XAUUSDm", "EURUSDm", "GBPUSDm"]
 TIMEFRAMES = ["M1", "M5", "M15", "H1", "H4", "D1"]

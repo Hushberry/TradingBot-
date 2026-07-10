@@ -35,4 +35,4 @@ def compare_trends(h1_trend, h4_trend):
     if h1_trend == h4_trend:
         return "✅ Confirmed"
     
-    return "❌ Conflict"
+    return "🚩 Conflict"

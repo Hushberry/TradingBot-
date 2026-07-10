@@ -12,7 +12,13 @@ def show_header(account_info):
     """
 
     print("=" * config.LINE_WIDTH)
-    print(f"{'KAI BOT AI TRADING TERMINAL v1.0':^{config.LINE_WIDTH}}")
+
+    print(f"{config.BOT_NAME} Terminal v{config.VERSION}".center(config.LINE_WIDTH))
+
+    print(f"{config.BOT_SUBTITLE}".center(config.LINE_WIDTH))
+
+    print(f"{config.TAGLINE}".center(config.LINE_WIDTH))
+    
     print("=" * config.LINE_WIDTH)
 
     print(f"{'Bot':<12}: {config.BOT_NAME}")

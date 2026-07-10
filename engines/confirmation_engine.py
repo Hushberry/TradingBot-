@@ -17,61 +17,88 @@ def calculate_trade_score(
     # Trend
     # -------------------------
     if trend in ["📈 Uptrend", "📉 Downtrend"]:
-        score += 1
+        score += 20
+
+    elif trend == "🟡 Pullback":
+        score += 10
+
+    else:
+        score += 5
 
     # -------------------------
     # Structure
     # -------------------------
-    if market_structure in [
-        "Higher Highs",
+    if market_structure  == "Higher Highs":
+        score += 20
+
+    elif market_structure == "Lower Lows":
+        score += 20
+
+    elif market_structure in [
+        "Higher Lows",
         "Lower Highs",
     ]:
-        score += 1
+        score += 15
+
+    else:
+        score += 5
+ 
 
     # -------------------------
     # Candlestick Pattern
     # -------------------------
-    bullish = [
-        "Hammer",
-        "Bullish Engulfing",
-    ]
 
-    bearish = [
-        "Shooting Star",
+    strong_patterns = [
+        "Bullish Engulfing",
         "Bearish Engulfing",
     ]
 
-    if pattern in bullish + bearish:
-        score += 1
+    medium_patterns = [
+        "Morning Star",
+        "Evening Star",
+    ]
+
+    weak_patterns = [
+        "Hammer",
+        "Shooting Star",
+    ]
+
+    if pattern in strong_patterns:
+        score += 20
+
+    elif pattern in medium_patterns:
+        score += 18
+
+    elif pattern in weak_patterns:
+        score += 15
+
+    elif pattern == "Doji":
+        score += 5
+
+    else:
+        score += 0
 
     # -------------------------
     # Multi Timeframe
     # -------------------------
     if mtf_confirmation == "✅ Confirmed":
-        score += 1
+        score += 25
 
     # -------------------------
     # Signal
     # -------------------------
-    if signal in [
-        "📈 BUY",
-        "📉 SELL",
-    ]:
-        score += 1
+    if signal in [ "📈 BUY", "📉 SELL"]:
+        score += 15
 
     # ----------------------------------
     # Final Confidence
     # ----------------------------------
 
-    confidence = score
+    percent = min(score, 100)
 
-    # Never exceed 5 stars
-    if confidence > 5:
-        confidence = 5
+    confidence = percent // 20
 
     stars = "⭐" * confidence + "☆" * (5 - confidence)
-
-    percent = confidence * 20
 
     return {
         "score": score,

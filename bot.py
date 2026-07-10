@@ -25,6 +25,7 @@ from ui import trade_history
 from ui import performance_dashboard
 from ui import live_terminal
 from screens import dashboard
+from engines import ai_score_engine
 
 
 start_time = time.time()
@@ -180,6 +181,8 @@ SYMBOLS = [
 TIMEFRAME = mt5.TIMEFRAME_H1
 CANDLE_COUNT = 500
 
+
+
 best_trade = None
 highest_score = -1 
 
@@ -269,6 +272,9 @@ buy_count = 0
 sell_count = 0
 wait_count = 0
 
+total_ai_score = 0  
+
+
 for symbol in SYMBOLS:
 
     rates = candle_engine.get_historical_candles(
@@ -308,14 +314,15 @@ for symbol in SYMBOLS:
     # -------------------------
 
     signal = signal_engine.get_trade_bias(trend)
+    
+    if signal == "✅ BUY":
+       buy_count += 1
 
-    if signal == "📈 BUY":
-        buy_count += 1
-    elif signal == "📉 SELL":
-        sell_count += 1
-    else:
+    elif signal == "🔴 SELL":
+      sell_count += 1
+
+    elif signal == "⏯  WAIT":
         wait_count += 1
-
     entry = entry_engine.get_entry_price(
         signal,
         latest_candle
@@ -344,19 +351,27 @@ for symbol in SYMBOLS:
     # AI Confidence
     # -------------------------
 
-    confirmation = confirmation_engine.calculate_trade_score(
-        trend,
-        pattern,
-        market_structure,
-        mtf_confirmation,
-        signal,
-    )
+    ai = ai_score_engine.calculate_score(
+    trend,
+    pattern,
+    market_structure,
+    mtf_confirmation,
+    ma50,
+    ma200,
+    latest_candle["close"]
+)
 
-    score = confirmation["score"]
-    confidence = confirmation["confidence"]
-    rating = confirmation["rating"]
-    percent = confirmation["percent"]
+    score = ai["score"]
+    percent = ai["percent"]
+    grade = ai["grade"]
 
+    total_ai_score += percent
+
+    average_score = total_ai_score / len(market_data)
+
+
+
+    
     # -------------------------
     # Display Analysis
     # -------------------------
@@ -376,8 +391,9 @@ for symbol in SYMBOLS:
         h4_trend,
         mtf_confirmation,
         score,
-        rating,
+        percent,
         signal,
+        grade,
         entry,
         risk,
     )
@@ -392,8 +408,27 @@ analysis_dashboard.show_scan_summary(
     len(market_data),
     buy_count,
     sell_count,
-    wait_count
+    wait_count,
+    average_score
 )
+
+print()
+
+print("=" * config.LINE_WIDTH)
+
+print("KAI SMART MONEY AI v3.0".center(config.LINE_WIDTH))
+
+print("(Core Engine)".center(config.LINE_WIDTH))
+
+print("Institutional Trading Intelligence".center(config.LINE_WIDTH))
+
+print("Powered by Smart Money Concepts + AI".center(config.LINE_WIDTH))
+
+print("=" * config.LINE_WIDTH)
+
+print(f"Scan Completed Successfully".center(config.LINE_WIDTH))
+
+print("=" * config.LINE_WIDTH)
 
 runtime = time.time() - start_time
 

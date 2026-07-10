@@ -33,13 +33,13 @@ def is_bearish(price, ma50, ma200):
     
 def analyze_trend(price, ma50, ma200):
    if price > ma50 and ma50 > ma200:
-       return "📈 Bull"
+       return "🚀 Bull"
    
    elif price < ma50 and ma50 < ma200:
        return "📉 Bear"
    
    else:
-       return "🟡 Pullback"
+       return "↕️ Pullback"
 
 def get_market_structure(rates):
     """
