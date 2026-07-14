@@ -1,4 +1,4 @@
-import config
+from core import config
 import MetaTrader5 as mt5
 from datetime import datetime
 from colorama import Fore, Style, init

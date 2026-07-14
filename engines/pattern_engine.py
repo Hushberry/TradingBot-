@@ -123,8 +123,8 @@ def analyze_patterns(rates):
     Scan latest candles and identify known patterns.
     """
 
-    latest = rates[-1]
-    previous = rates[-2]
+    latest = rates.iloc[-1]
+    previous = rates.iloc[-2]
 
     if is_hammer(latest):
         return "Hammer"
@@ -141,4 +141,4 @@ def analyze_patterns(rates):
     if is_bearish_engulfing(previous, latest):
         return "Bearish Engulfing"
     
-    return "No Pattern"
+    return "No pattern"

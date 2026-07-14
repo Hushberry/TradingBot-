@@ -2,7 +2,7 @@ from ast import Return
 from encodings.punycode import T
 from turtle import title
 from numpy import empty, percentile
-import config
+from core import config
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -41,6 +41,8 @@ def show_analysis(
     trend,
     market_structure,
     pattern,
+    order_blocks,
+    liquidity,
     support,
     resistance,
     h1_trend,
@@ -53,6 +55,7 @@ def show_analysis(
     entry,
     risk,
 ):
+
 
     LINE = config.LINE_WIDTH
 
@@ -91,7 +94,7 @@ def show_analysis(
         "Resistance",
         f"{resistance:.5f}" if isinstance(resistance, float) else str(resistance),
         "MA50",
-        f"{ma50:.5f}"
+       f"{ma50:.5f}" if ma50 is not None else "N/A"
     )
 
     table.add_row(
@@ -116,7 +119,6 @@ def show_analysis(
         "",
         ""
     )
-
     console.print()
 
     console.print(
@@ -127,6 +129,61 @@ def show_analysis(
             expand=False,
         )
     )
+    console.print(show_order_blocks(order_blocks))
+
+    print("=" * 60)
+    print("ORDER BLOCK DATA")
+    print(order_blocks)
+    print(type(order_blocks))
+    print("=" * 60)
+
+
+
+def show_order_blocks(order_blocks):
+    """
+    Display Institutional Footprint Summary.
+    """
+
+    table = Table(show_header=True, box=None)
+
+    table.add_column("Metric", style="cyan", no_wrap=True)
+    table.add_column("Value", style="green")
+
+    if not order_blocks:
+        table.add_row("Status", "No Order Blocks")
+        return Panel(
+            table,
+            title="[bold yellow]Institutional Footprint[/bold yellow]",
+            border_style="yellow",
+            expand=False,
+        )
+
+    bullish = len(order_blocks.get("bullish_order_blocks", []))
+    bearish = len(order_blocks.get("bearish_order_blocks", []))
+    breaker = len(order_blocks.get("breaker_blocks", []))
+    mitigated = len(order_blocks.get("mitigated_blocks", []))
+    fresh = len(order_blocks.get("fresh_blocks", []))
+    invalidated = len(order_blocks.get("invalidated_blocks", []))
+
+    stats = order_blocks.get("statistics", {})
+    displacement = stats.get("displacement_count", 0)
+
+    table.add_row("Bullish OB", str(bullish))
+    table.add_row("Bearish OB", str(bearish))
+    table.add_row("Breaker Blocks", str(breaker))
+    table.add_row("Fresh Blocks", str(fresh))
+    table.add_row("Mitigated", str(mitigated))
+    table.add_row("Invalidated", str(invalidated))
+    table.add_row("Displacement", str(displacement))
+
+    return Panel(
+        table,
+        title="[bold yellow]Institutional Footprint[/bold yellow]",
+        border_style="yellow",
+        expand=False,
+    )
+
+
 
 
 def show_scan_summary(

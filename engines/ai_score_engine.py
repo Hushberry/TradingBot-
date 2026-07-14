@@ -36,12 +36,14 @@ def calculate_score(
     pattern,
     structure,
     mtf_confirmation,
+    order_blocks,
+    liquidity,
     ma50,
     ma200,
     price,
 ):
 
-    score = 0
+    score = 0 
 
     # ===============================
     # Trend
@@ -113,22 +115,39 @@ def calculate_score(
     # ===============================
     # EMA / MA Alignment
     # ===============================
+    if ma50 is not None and ma200 is not None:
+        if trend == "🚀 Bull":
 
-    if trend == "🚀 Bull":
-
-        if price > ma50 > ma200:
-            score += EMA_WEIGHT
+            if price > ma50 > ma200:
+                score += EMA_WEIGHT
 
         elif price > ma50:
             score += 8
 
-    elif trend == "📉 Bear":
+        elif trend == "📉 Bear":
 
-        if price < ma50 < ma200:
-            score += EMA_WEIGHT
+            if price < ma50 < ma200:
+                score += EMA_WEIGHT
 
-        elif price < ma50:
-            score += 8
+            elif price < ma50:
+                score += 8
+
+
+    #================================
+    # Order Block
+    #================================
+
+    if order_blocks:
+
+        score += 10
+
+        if order_blocks.get("fresh", False):
+            score += 10
+
+        if not order_blocks.get("broken"):
+            score += 10
+
+        score += order_blocks.get("strength", 0) // 10
 
     # ===============================
     # Normalize Score

@@ -1,7 +1,7 @@
 
 from engines import candle_engine
 from engines import trend_engine
-import config
+import core.config as config
 
 
 def get_timeframe_trend(symbol, timeframe):
@@ -14,7 +14,8 @@ def get_timeframe_trend(symbol, timeframe):
     if rates is None:
         return None
     
-    latest_price = rates[-1]["close"]
+    latest_price = rates.iloc[-1]["close"]
+    
 
     fast_ma = trend_engine.calculate_ma(rates, config.FAST_MA)
     slow_ma = trend_engine.calculate_ma(rates, config.SLOW_MA)

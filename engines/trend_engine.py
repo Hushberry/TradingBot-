@@ -1,18 +1,27 @@
 import MetaTrader5 as mt5
+import pandas as pd
 
-def calculate_ma(rates, period):
+def calculate_ma(candles, period):
     """
 
-    Calculate a Simple moving average (SMA) using the closing prices.
+    Calculate a Simple moving average (SMA) 
+    using the closing prices.
+
+    Parameters
+    ----------
+    candles : pandas.DataFrame
+    period : int
+
     """
 
-    close = []
+    if candles is None or len(candles) < period:
+        return None
+    
+    if not isinstance(candles, pd.DataFrame):
+        candles = pd.DataFrame(candles)
 
-    for candle in rates[-period:]:
-        close.append(candle['close'])
+    return candles["close"].rolling(period).mean().iloc[-1]
 
-    ma = sum(close) / period
-    return ma
 
 
 def is_bullish(price, ma50, ma200):
@@ -46,9 +55,9 @@ def get_market_structure(rates):
     Analyze the last few candles to determine the market structure (higher highs, lower lows, etc.).
     """
 
-    last = rates[-2]
-    previous = rates[-3]
-    older = rates[-4]
+    last = rates.iloc[-2]
+    previous = rates.iloc[-3]
+    older = rates.iloc[-4]
 
     if (
         last['high'] > previous['high']

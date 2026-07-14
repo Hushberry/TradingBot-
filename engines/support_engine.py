@@ -1,4 +1,6 @@
-def find_support(rates, lookback=20):
+import pandas as pd
+
+def find_support(candles, lookback=20):
     """
     Find the nearest support level.
 
@@ -10,17 +12,19 @@ def find_support(rates, lookback=20):
         Float: Lowest low in the lookback period.
     """
 
-    lows = []
+    if candles is None or len(candles) < lookback:
+        return None
+    
+    if not isinstance(candles, pd.DataFrame):
+        candles = pd.DataFrame(candles)
 
-    for candle in rates[-lookback:]:
-        lows.append(candle["low"])
+    recent = candles.tail(lookback)
 
-    support = min(lows)
-
-    return support
+    return recent["low"].min()
+    
 
 
-def find_resistance(rates, lookback=20):
+def find_resistance(candles, lookback=20):
     """
     Find the nearest resistance level.
 
@@ -32,11 +36,12 @@ def find_resistance(rates, lookback=20):
         Float: Highest high in the lookback period.
     """
 
-    highs = []
+    if candles is None or len(candles) < lookback:
+        return None
+    
+    if not isinstance(candles, pd.DataFrame):
+        candles = pd.DataFrame(candles)
 
-    for candle in rates[-lookback:]:
-        highs.append(candle["high"])
+    recent = candles.tail(lookback)
 
-    resistance = max(highs)
-
-    return resistance
+    return recent["high"].max()

@@ -1,7 +1,8 @@
 import MetaTrader5 as mt5
+import pandas as pd
 from datetime import datetime
 
-from config import LINE_WIDTH
+from core.config import LINE_WIDTH
 
 
 def get_timeframe_name(timeframe):
@@ -21,25 +22,19 @@ def get_timeframe_name(timeframe):
     }
     return timeframe_names.get(timeframe, "Unknown Timeframe")
 
+
 def get_historical_candles(symbol, timeframe, count=500):
     """
     Get historical candle data from MetaTrader 5.
 
-    Args: 
-        symbol (str): Trading symbol (e.g. XAUUSDm).
-        timeframe (int): MetaTrader 5 timeframe constant.
-        count (int): Number of candles to retrieve.
-
     Returns:
-       numpy.ndarray | None:
-            Historical candle data if successful,
-            otherwise None.
+        pandas.DataFrame | None
     """
-    
+
     rates = mt5.copy_rates_from_pos(
-        symbol, 
-        timeframe, 
-        0, 
+        symbol,
+        timeframe,
+        0,
         count
     )
 
@@ -47,5 +42,41 @@ def get_historical_candles(symbol, timeframe, count=500):
         print(f"Failed to retrieve candles for {symbol}")
         print(mt5.last_error())
         return None
-    
-    return rates
+
+    candles = pd.DataFrame(rates)
+
+    if candles.empty:
+        return None
+
+    # Convert timestamp
+    candles["time"] = pd.to_datetime(
+        candles["time"],
+        unit="s"
+    )
+
+    # Ensure numeric columns
+    numeric_columns = [
+        "open",
+        "high",
+        "low",
+        "close",
+        "tick_volume",
+        "spread",
+        "real_volume"
+    ]
+
+    for column in numeric_columns:
+
+        if column in candles.columns:
+
+            candles[column] = pd.to_numeric(
+                candles[column],
+                errors="coerce"
+            )
+
+    candles.reset_index(
+        drop=True,
+        inplace=True
+    )
+
+    return candles
